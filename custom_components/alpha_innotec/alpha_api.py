@@ -124,11 +124,10 @@ class AlphaAPI:
         sysinfo = self.doRequest("systeminformation")
         for g in roomdata["groups"]:
             for r in g["rooms"]:
-                rooms[r["name"]] = r
+                rooms[r["name"]] = {"controller_data": r}
         for id, m in gatewaydata["modules"].items():
             if m["type"] == "sense_control":
-                rooms[m["room"]]["battery"] = m["battery"]
-                rooms[m["room"]]["currentTemperature"] = m["currentTemperature"]
+                rooms[m["room"]]["gateway_data"] = m
             elif m["type"] == "floor":
                 floors[m["name"]] = m
         return {"rooms": rooms, "sysinfo": sysinfo, "floors": floors}

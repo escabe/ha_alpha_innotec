@@ -30,8 +30,7 @@ async def async_setup_entry(
     # await coordinator.async_config_entry_first_refresh()
 
     async_add_entities(
-        AlphaThermostatBattery(coordinator, room)
-        for idx, room in enumerate(coordinator.data["rooms"])
+        AlphaThermostatBattery(coordinator, room) for room in coordinator.data["rooms"]
     )
 
 
@@ -48,5 +47,7 @@ class AlphaThermostatBattery(AlphaBaseEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = self.coordinator.data["rooms"][self.room]["battery"]
+        self._attr_native_value = self.coordinator.data["rooms"][self.room][
+            "gateway_data"
+        ]["battery"]
         self.async_write_ha_state()

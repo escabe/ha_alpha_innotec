@@ -31,8 +31,7 @@ async def async_setup_entry(
     # await coordinator.async_config_entry_first_refresh()
 
     async_add_entities(
-        AlphaThermostat(coordinator, room)
-        for idx, room in enumerate(coordinator.data["rooms"])
+        AlphaThermostat(coordinator, room) for room in coordinator.data["rooms"]
     )
 
 
@@ -52,9 +51,9 @@ class AlphaThermostat(AlphaBaseEntity, ClimateEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_target_temperature = self.coordinator.data["rooms"][self.room][
-            "desiredTemperature"
-        ]
+            "controller_data"
+        ]["desiredTemperature"]
         self._attr_current_temperature = self.coordinator.data["rooms"][self.room][
-            "currentTemperature"
-        ]
+            "gateway_data"
+        ]["currentTemperature"]
         self.async_write_ha_state()
