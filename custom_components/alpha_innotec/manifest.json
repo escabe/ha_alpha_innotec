@@ -1,0 +1,17 @@
+{
+  "domain": "alpha_innotec",
+  "name": "Alpha Innotec Heating and Cooling",
+  "codeowners": [
+    "@escabe"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/alpha_innotec",
+  "homekit": {},
+  "iot_class": "local_polling",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "integration_type": "hub",
+  "version": "0.1.0"
+}
