@@ -50,12 +50,3 @@ class AlphaThermostatBattery(AlphaBaseEntity, SensorEntity):
         """Handle updated data from the coordinator."""
         self._attr_native_value = self.coordinator.data["rooms"][self.room]["battery"]
         self.async_write_ha_state()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.room)},
-            name=self.room + " Thermostat",
-            manufacturer="Danfoss",
-            model="DRS21",
-        )
