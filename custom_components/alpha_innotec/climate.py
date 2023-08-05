@@ -55,6 +55,6 @@ class AlphaThermostat(AlphaBaseEntity, ClimateEntity):
             "desiredTemperature"
         ]
         self._attr_current_temperature = self.coordinator.data["rooms"][self.room][
-            "actualTemperature"
+            "currentTemperature"
         ]
         self.async_write_ha_state()

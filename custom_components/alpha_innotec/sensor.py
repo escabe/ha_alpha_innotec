@@ -48,7 +48,5 @@ class AlphaThermostatBattery(AlphaBaseEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = self.coordinator.data["rooms"][self.room][
-            "roomstatus"
-        ]
+        self._attr_native_value = self.coordinator.data["rooms"][self.room]["battery"]
         self.async_write_ha_state()

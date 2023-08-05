@@ -79,6 +79,10 @@ class AlphaAPI:
         )
         self.controlbox_userid = data["userid"]
         self.controlbox_reqcount = 0
+
+        data = self.doRequest("gateway/configuration/get")
+        self.gateway_ip = data["gateway"]["address"]
+
         return True
 
     def doRequest(self, endpoint: str, data: dict = None) -> dict:
@@ -97,11 +101,34 @@ class AlphaAPI:
         self.controlbox_reqcount += 1
         return data
 
+    def gatewayRequest(self, endpoint: str, data: dict = None) -> dict:
+        if data is None:
+            data = dict()
+        data["udid"] = "HomeAssistant"
+        data["userlogin"] = "gateway"
+        data["request_signature"] = AlphaAPI.getRequestSignature(
+            data, self.gateway_password
+        )
+        res = requests.post(f"http://{self.gateway_ip}/api/{endpoint}", data=data)
+        data = res.json()
+        if not data["success"]:
+            raise data["message"]
+        self.controlbox_reqcount += 1
+        return data
+
     def fetch_data(self):
         rooms = {}
+        floors = {}
         roomdata = self.doRequest("room/list")
+        gatewaydata = self.gatewayRequest("gateway/dbmodules")
         sysinfo = self.doRequest("systeminformation")
         for g in roomdata["groups"]:
             for r in g["rooms"]:
                 rooms[r["name"]] = r
-        return {"rooms": rooms, "sysinfo": sysinfo}
+        for id, m in gatewaydata["modules"].items():
+            if m["type"] == "sense_control":
+                rooms[m["room"]]["battery"] = m["battery"]
+                rooms[m["room"]]["currentTemperature"] = m["currentTemperature"]
+            elif m["type"] == "floor":
+                floors[m["name"]] = m
+        return {"rooms": rooms, "sysinfo": sysinfo, "floors": floors}
