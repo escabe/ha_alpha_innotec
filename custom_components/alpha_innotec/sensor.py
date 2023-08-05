@@ -27,7 +27,7 @@ async def async_setup_entry(
     # If you do not want to retry setup on failure, use
     # coordinator.async_refresh() instead
     #
-    await coordinator.async_config_entry_first_refresh()
+    # await coordinator.async_config_entry_first_refresh()
 
     async_add_entities(
         AlphaThermostatBattery(coordinator, room)
@@ -48,5 +48,7 @@ class AlphaThermostatBattery(AlphaBaseEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = self.coordinator.data["rooms"][self.room]["battery"]
+        self._attr_native_value = self.coordinator.data["rooms"][self.room][
+            "roomstatus"
+        ]
         self.async_write_ha_state()

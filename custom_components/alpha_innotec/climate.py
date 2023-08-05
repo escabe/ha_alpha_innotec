@@ -28,7 +28,7 @@ async def async_setup_entry(
     # If you do not want to retry setup on failure, use
     # coordinator.async_refresh() instead
     #
-    await coordinator.async_config_entry_first_refresh()
+    # await coordinator.async_config_entry_first_refresh()
 
     async_add_entities(
         AlphaThermostat(coordinator, room)
@@ -52,9 +52,9 @@ class AlphaThermostat(AlphaBaseEntity, ClimateEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_target_temperature = self.coordinator.data["rooms"][self.room][
-            "target_temp"
+            "desiredTemperature"
         ]
         self._attr_current_temperature = self.coordinator.data["rooms"][self.room][
-            "current_temp"
+            "actualTemperature"
         ]
         self.async_write_ha_state()

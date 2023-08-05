@@ -37,6 +37,6 @@ class AlphaCoordinator(DataUpdateCoordinator):
                 # Grab active context variables to limit data required to be fetched from API
                 # Note: using context is not required if there is no need or ability to limit
                 # data retrieved from API.
-                return await self.alpha_api.fetch_data()
+                return await self.hass.async_add_executor_job(self.alpha_api.fetch_data)
         except:
             pass
