@@ -166,7 +166,7 @@ class AlphaPumpFlow(AlphaPumpBaseEntity, SensorEntity):
             if val == "---":
                 self._attr_native_value = 0.0
             else:
-                self._attr_native_value = float(val) / 60.0
+                self._attr_native_value = float(val)
 
         self.async_write_ha_state()
 
