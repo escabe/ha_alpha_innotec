@@ -12,7 +12,7 @@ from datetime import timedelta
 class AlphaCoordinator(DataUpdateCoordinator):
     """Alpha Innotec Coordinator."""
 
-    def __init__(self, hass: HomeAssistant, alpha_api) -> None:
+    def __init__(self, hass: HomeAssistant, alpha_api, pump_api) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
@@ -23,6 +23,7 @@ class AlphaCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=10),
         )
         self.alpha_api = alpha_api
+        self.pump_api = pump_api
 
     async def _async_update_data(self):
         """Fetch data from API endpoint.
@@ -37,6 +38,9 @@ class AlphaCoordinator(DataUpdateCoordinator):
                 # Grab active context variables to limit data required to be fetched from API
                 # Note: using context is not required if there is no need or ability to limit
                 # data retrieved from API.
-                return await self.hass.async_add_executor_job(self.alpha_api.fetch_data)
+                data = await self.hass.async_add_executor_job(self.alpha_api.fetch_data)
+                await self.hass.async_add_executor_job(self.pump_api.refresh)
+                data["pump_data"] = self.pump_api.values
+                return data
         except:
             pass

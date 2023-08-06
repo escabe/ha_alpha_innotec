@@ -1,6 +1,6 @@
 import logging
 
-from .entity import AlphaBaseEntity
+from .entity import AlphaBaseEntity, AlphaPumpBaseEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
@@ -19,6 +19,7 @@ async def async_setup_entry(
     # assuming API object stored here by __init__.py
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
     allmodules = hass.data[DOMAIN][entry.entry_id]["allmodules"]
+    pumpmap = hass.data[DOMAIN][entry.entry_id]["pumpmap"]
     # Fetch initial data so we have data when entities subscribe
     #
     # If the refresh fails, async_config_entry_first_refresh will
@@ -37,6 +38,10 @@ async def async_setup_entry(
                         coordinator, room=room_data["name"], module_id=module_id
                     )
                 )
+    for cat, items in pumpmap.items():
+        for name, id in items.items():
+            if cat == "Temperaturen":
+                li.append(AlphaPumpTemperature(coordinator, name, id))
 
     async_add_entities(li)
 
@@ -59,4 +64,28 @@ class AlphaThermostatBattery(AlphaBaseEntity, SensorEntity):
         self._attr_native_value = self.coordinator.data["modules"][self.module_id][
             "battery"
         ]
+        self.async_write_ha_state()
+
+
+class AlphaPumpTemperature(AlphaPumpBaseEntity, SensorEntity):
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = "°C"
+    _attr_suggested_display_precision = 0.1
+
+    def __init__(self, coordinator, name, id) -> None:
+        """Pass coordinator to CoordinatorEntity."""
+        super().__init__(coordinator, name, id)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        val = self.coordinator.data["pump_data"][self._attr_unique_id]
+
+        if "°C" in val:
+            self._attr_native_unit_of_measurement = "°C"
+            self._attr_native_value = float(val.strip("°C"))
+        elif "K" in val:
+            self._attr_native_unit_of_measurement = "K"
+            self._attr_native_value = float(val.strip("K"))
+
         self.async_write_ha_state()

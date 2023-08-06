@@ -14,7 +14,9 @@
                     "controller_host": "Controller host",
                     "controller_password": "Controller password",
                     "controller_username": "Controller username",
-                    "gateway_password": "Gateway password"
+                    "gateway_password": "Gateway password",
+                    "pump_host": "Heat Pump host",
+                    "pump_password": "Heat Pump password"
                 }
             }
         }

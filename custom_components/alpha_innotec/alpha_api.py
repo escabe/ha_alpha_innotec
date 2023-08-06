@@ -3,6 +3,8 @@ import base64
 import requests
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
+from websockets.sync.client import connect
+import xml.etree.ElementTree as ET
 
 
 class AlphaAPI:
@@ -125,3 +127,43 @@ class AlphaAPI:
             for r in g["rooms"]:
                 rooms[str(r["id"]).zfill(3)] = r
         return {"rooms": rooms, "modules": gatewaydata["modules"], "sysinfo": sysinfo}
+
+
+class AlphaPumpAPI:
+    def __init__(self, ip, password) -> None:
+        self.ip = ip
+        self.password = password
+
+    def connect(self):
+        self.ws = connect(f"ws://{self.ip}:8214", subprotocols=["Lux_WS"])
+        self.ws.send(f"LOGIN;{self.password}")
+        message = self.ws.recv()
+        doc = ET.fromstring(message)
+        self.nav_id = doc.find("item/name[.='Informatie']..").attrib["id"]
+        self.ws.send(f"GET;{self.nav_id}")
+        message = self.ws.recv()
+        doc = ET.fromstring(message)
+        self.map = {}
+        self.values = {}
+        for cat in doc:
+            n = cat.find("name")
+            if n is not None:
+                c = n.text
+                catmap = {}
+                for item in cat.findall("item"):
+                    id = item.attrib["id"]
+                    name = item.find("name").text
+                    value = item.find("value").text
+                    self.values[id] = value
+                    catmap[name] = id
+            self.map[c] = catmap
+
+    def refresh(self):
+        self.ws.send("REFRESH")
+        message = self.ws.recv()
+        doc = ET.fromstring(message)
+        for cat in doc:
+            for item in cat:
+                id = item.attrib["id"]
+                value = item.find("value").text
+                self.values[id] = value

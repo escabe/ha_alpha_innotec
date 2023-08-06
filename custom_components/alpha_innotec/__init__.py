@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-from .alpha_api import AlphaAPI
+from .alpha_api import AlphaAPI, AlphaPumpAPI
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR, Platform.BINARY_SENSOR]
 from .coordinator import AlphaCoordinator
@@ -28,11 +28,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     allmodules = await hass.async_add_executor_job(
         alpha_api.gatewayRequest, "gateway/allmodules"
     )
-    coordinator = AlphaCoordinator(hass, alpha_api)
+
+    pump_api = AlphaPumpAPI(entry.data["pump_host"], entry.data["pump_password"])
+    success = await hass.async_add_executor_job(pump_api.connect)
+
+    coordinator = AlphaCoordinator(hass, alpha_api, pump_api)
     await coordinator.async_config_entry_first_refresh()
+
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
         "allmodules": allmodules,
+        "pumpmap": pump_api.map,
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

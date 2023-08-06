@@ -17,3 +17,20 @@ class AlphaBaseEntity(CoordinatorEntity, Entity):
             manufacturer="Alpha Innotec",
             model="Room",
         )
+
+
+class AlphaPumpBaseEntity(CoordinatorEntity, Entity):
+    def __init__(self, coordinator, name, id) -> None:
+        """Pass coordinator to CoordinatorEntity."""
+        super().__init__(coordinator)
+        self._attr_name = name
+        self._attr_unique_id = id
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        return DeviceInfo(
+            identifiers={(DOMAIN, "pump")},
+            name="Heatpump",
+            manufacturer="Alpha Innotec",
+            model="MSW2-6S",
+        )
