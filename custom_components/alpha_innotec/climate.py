@@ -37,7 +37,7 @@ async def async_setup_entry(
                     AlphaThermostat(
                         coordinator,
                         room=room_data["name"],
-                        room_id=room_id.zfill(3),
+                        room_id=room_id,
                         thermostat_id=module_id,
                     )
                 )
@@ -55,6 +55,8 @@ class AlphaThermostat(AlphaBaseEntity, ClimateEntity):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator, room=room)
         self._attr_name = room
+        self.raw_room_id = room_id
+        room_id = room_id.zfill(3)
         self.room_id = room_id
         self.thermostat_id = thermostat_id
         self._attr_unique_id = "room_" + room_id
@@ -69,3 +71,13 @@ class AlphaThermostat(AlphaBaseEntity, ClimateEntity):
             self.thermostat_id
         ]["currentTemperature"]
         self.async_write_ha_state()
+
+    def set_temperature(self, **kwargs):
+        self.coordinator.alpha_api.doRequest(
+            "room/settemperature",
+            {
+                "roomid": self.raw_room_id,
+                "temperature": kwargs["temperature"],
+                "change_mode": 0,
+            },
+        )
