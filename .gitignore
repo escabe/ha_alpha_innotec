@@ -162,4 +162,7 @@ cython_debug/
 
 *
 !.gitignore
+!README.md
+!hacs.json
+!requirements.txt
 !custom_components/
