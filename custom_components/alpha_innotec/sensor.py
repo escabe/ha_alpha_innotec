@@ -17,8 +17,8 @@ async def async_setup_entry(
 ) -> None:
     """Config entry example."""
     # assuming API object stored here by __init__.py
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+    allmodules = hass.data[DOMAIN][entry.entry_id]["allmodules"]
     # Fetch initial data so we have data when entities subscribe
     #
     # If the refresh fails, async_config_entry_first_refresh will
@@ -28,10 +28,17 @@ async def async_setup_entry(
     # coordinator.async_refresh() instead
     #
     # await coordinator.async_config_entry_first_refresh()
+    li = []
+    for room_id, room_data in allmodules["modules"]["rooms"].items():
+        for module_id, module_data in room_data["modules"].items():
+            if module_data["type"] == "sense_control":
+                li.append(
+                    AlphaThermostatBattery(
+                        coordinator, room=room_data["name"], module_id=module_id
+                    )
+                )
 
-    async_add_entities(
-        AlphaThermostatBattery(coordinator, room) for room in coordinator.data["rooms"]
-    )
+    async_add_entities(li)
 
 
 class AlphaThermostatBattery(AlphaBaseEntity, SensorEntity):
@@ -39,15 +46,17 @@ class AlphaThermostatBattery(AlphaBaseEntity, SensorEntity):
     _attr_native_unit_of_measurement = "%"
     _attr_suggested_display_precision = 0.1
 
-    def __init__(self, coordinator, room) -> None:
+    def __init__(self, coordinator, room, module_id) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator, room=room)
-        self._attr_unique_id = room + "_battery"
+        self._attr_name = "Battery"
+        self.module_id = module_id
+        self._attr_unique_id = module_id + "_battery"
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = self.coordinator.data["rooms"][self.room][
-            "gateway_data"
-        ]["battery"]
+        self._attr_native_value = self.coordinator.data["modules"][self.module_id][
+            "battery"
+        ]
         self.async_write_ha_state()

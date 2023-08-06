@@ -118,16 +118,10 @@ class AlphaAPI:
 
     def fetch_data(self):
         rooms = {}
-        floors = {}
         roomdata = self.doRequest("room/list")
         gatewaydata = self.gatewayRequest("gateway/dbmodules")
         sysinfo = self.doRequest("systeminformation")
         for g in roomdata["groups"]:
             for r in g["rooms"]:
-                rooms[r["name"]] = {"controller_data": r}
-        for id, m in gatewaydata["modules"].items():
-            if m["type"] == "sense_control":
-                rooms[m["room"]]["gateway_data"] = m
-            elif m["type"] == "floor":
-                floors[m["name"]] = m
-        return {"rooms": rooms, "sysinfo": sysinfo, "floors": floors}
+                rooms[str(r["id"]).zfill(3)] = r
+        return {"rooms": rooms, "modules": gatewaydata["modules"], "sysinfo": sysinfo}

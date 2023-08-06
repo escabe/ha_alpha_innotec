@@ -38,14 +38,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     #     your_validate_func, data["username"], data["password"]
     # )
 
-    hub = AlphaAPI(
+    alpha_api = AlphaAPI(
         data["controller_host"],
         data["controller_username"],
         data["controller_password"],
         data["gateway_password"],
     )
 
-    if not await hub.login():
+    if not await hass.async_add_executor_job(alpha_api.login):
         raise InvalidAuth
 
     # If you cannot connect:
@@ -83,11 +83,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""

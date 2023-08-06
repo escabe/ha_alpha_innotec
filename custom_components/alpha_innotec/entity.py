@@ -13,7 +13,7 @@ class AlphaBaseEntity(CoordinatorEntity, Entity):
     def device_info(self) -> DeviceInfo:
         return DeviceInfo(
             identifiers={(DOMAIN, self.room)},
-            name=self.room + " Thermostat",
-            manufacturer="Danfoss",
-            model="DRS21",
+            name=self.room + " Climate",
+            manufacturer="Alpha Innotec",
+            model="Room",
         )
