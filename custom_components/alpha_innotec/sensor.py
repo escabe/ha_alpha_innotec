@@ -20,6 +20,8 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
     allmodules = hass.data[DOMAIN][entry.entry_id]["allmodules"]
     pumpmap = hass.data[DOMAIN][entry.entry_id]["pumpmap"]
+
+    pump_name = coordinator.data["sysinfo"]["operationModeLabel"]
     # Fetch initial data so we have data when entities subscribe
     #
     # If the refresh fails, async_config_entry_first_refresh will
@@ -41,7 +43,17 @@ async def async_setup_entry(
     for cat, items in pumpmap.items():
         for name, id in items.items():
             if cat == "Temperaturen":
-                li.append(AlphaPumpTemperature(coordinator, name, id))
+                li.append(AlphaPumpTemperature(coordinator, pump_name, name, id))
+            elif cat == "Energie":
+                li.append(AlphaPumpEnergy(coordinator, pump_name, name, id))
+            elif cat == "Installatiestatus" and name == "Vermogen":
+                li.append(AlphaPumpPower(coordinator, pump_name, name, id))
+            elif cat == "Ingangen" and name == "Debiet":
+                li.append(
+                    AlphaPumpFlow(coordinator, pump_name, "Waterdoorstroming", id)
+                )
+
+    li.append(AlphaPumpMode(coordinator, pump_name, "Mode", None))
 
     async_add_entities(li)
 
@@ -72,14 +84,14 @@ class AlphaPumpTemperature(AlphaPumpBaseEntity, SensorEntity):
     _attr_native_unit_of_measurement = "°C"
     _attr_suggested_display_precision = 0.1
 
-    def __init__(self, coordinator, name, id) -> None:
+    def __init__(self, coordinator, pump_name, name, id) -> None:
         """Pass coordinator to CoordinatorEntity."""
-        super().__init__(coordinator, name, id)
+        super().__init__(coordinator, pump_name, name, id)
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        val = self.coordinator.data["pump_data"][self._attr_unique_id]
+        val = self.coordinator.data["pump_data"][self.id]
 
         if "°C" in val:
             self._attr_native_unit_of_measurement = "°C"
@@ -87,5 +99,90 @@ class AlphaPumpTemperature(AlphaPumpBaseEntity, SensorEntity):
         elif "K" in val:
             self._attr_native_unit_of_measurement = "K"
             self._attr_native_value = float(val.strip("K"))
+
+        self.async_write_ha_state()
+
+
+class AlphaPumpEnergy(AlphaPumpBaseEntity, SensorEntity):
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_native_unit_of_measurement = "kWh"
+    _attr_suggested_display_precision = 0.1
+    _attr_state_class = "total_increasing"
+
+    def __init__(self, coordinator, pump_name, name, id) -> None:
+        """Pass coordinator to CoordinatorEntity."""
+        super().__init__(coordinator, pump_name, name, id)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        val = self.coordinator.data["pump_data"][self.id]
+
+        if "kWh" in val:
+            self._attr_native_unit_of_measurement = "kWh"
+            self._attr_native_value = float(val.strip("kWh"))
+
+        self.async_write_ha_state()
+
+
+class AlphaPumpPower(AlphaPumpBaseEntity, SensorEntity):
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_native_unit_of_measurement = "kW"
+    _attr_suggested_display_precision = 0.1
+
+    def __init__(self, coordinator, pump_name, name, id) -> None:
+        """Pass coordinator to CoordinatorEntity."""
+        super().__init__(coordinator, pump_name, name, id)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        val = self.coordinator.data["pump_data"][self.id]
+
+        if "kW" in val:
+            self._attr_native_unit_of_measurement = "kW"
+            self._attr_native_value = float(val.strip("kW"))
+
+        self.async_write_ha_state()
+
+
+class AlphaPumpFlow(AlphaPumpBaseEntity, SensorEntity):
+    _attr_device_class = None
+    _attr_native_unit_of_measurement = "l/h"
+    _attr_suggested_display_precision = 0.1
+
+    def __init__(self, coordinator, pump_name, name, id) -> None:
+        """Pass coordinator to CoordinatorEntity."""
+        super().__init__(coordinator, pump_name, name, id)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        val = self.coordinator.data["pump_data"][self.id]
+
+        if "l/h" in val:
+            self._attr_native_unit_of_measurement = "l/h"
+            val = val.strip(" l/h")
+            if val == "---":
+                self._attr_native_value = 0.0
+            else:
+                self._attr_native_value = float(val)
+
+        self.async_write_ha_state()
+
+
+class AlphaPumpMode(AlphaPumpBaseEntity, SensorEntity):
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ["standby", "heating mode", "cooling mode", "hot water"]
+
+    def __init__(self, coordinator, pump_name, name, id) -> None:
+        """Pass coordinator to CoordinatorEntity."""
+        super().__init__(coordinator, pump_name, name, id)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        val = self.coordinator.data["sysinfo"]["operationMode"]
+        self._attr_native_value = val.strip()
 
         self.async_write_ha_state()
