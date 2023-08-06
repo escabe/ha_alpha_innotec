@@ -160,9 +160,4 @@ cython_debug/
 #.idea/
 
 
-*
-!.gitignore
-!README.md
-!hacs.json
-!requirements.txt
-!custom_components/
+
