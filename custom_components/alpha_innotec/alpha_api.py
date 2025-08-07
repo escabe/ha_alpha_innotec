@@ -135,7 +135,7 @@ class AlphaPumpAPI:
         self.password = password
 
     def connect(self):
-        self.ws = connect(f"ws://{self.ip}:8214", subprotocols=["Lux_WS"])
+        self.ws = connect(f"ws://{self.ip}:8214", subprotocols=["Lux_WS"], ping_interval=None)
         self.ws.send(f"LOGIN;{self.password}")
         message = self.ws.recv()
         doc = ET.fromstring(message)
